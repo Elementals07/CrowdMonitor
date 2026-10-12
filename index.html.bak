@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Smart Occupancy Monitoring</title>
+
+    <!-- =====================================================
+         MQTT.JS
+         ===================================================== -->
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+    <!-- =====================================================
+         CSS
+         ===================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        /* =================================================
+           HEADER
+           ================================================= */
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 6px;
+        }
+
+        header p {
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        /* =================================================
+           MAIN
+           ================================================= */
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* =================================================
+           CONNECTION STATUS
+           ================================================= */
+
+        .connection-box {
+            background: white;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 15px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ef4444;
+        }
+
+        .status-dot.connected {
+            background: #22c55e;
+        }
+
+        #connectionText {
+            color: #374151;
+        }
+
+        /* =================================================
+           DASHBOARD GRID
+           ================================================= */
+
+        .dashboard {
+            display: grid;
+            grid-template-columns:
+                repeat(auto-fit, minmax(230px, 1fr));
+
+            gap: 20px;
+        }
+
+        /* =================================================
+           CARDS
+           ================================================= */
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.08);
+
+            min-height: 170px;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 15px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .card-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .card-unit {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* =================================================
+           STATUS CARD
+           ================================================= */
+
+        .status-card {
+            grid-column: span 2;
+        }
+
+        #statusValue {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .normal {
+            color: #16a34a;
+        }
+
+        .full {
+            color: #d97706;
+        }
+
+        .overlimit {
+            color: #dc2626;
+        }
+
+        /* =================================================
+           CAPACITY CONTROL
+           ================================================= */
+
+        .capacity-control {
+            margin-top: 30px;
+
+            background: white;
+            border-radius: 15px;
+
+            padding: 25px;
+
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        .capacity-control h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .capacity-control p {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .capacity-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .capacity-row input {
+            width: 180px;
+
+            padding: 12px 14px;
+
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+
+            font-size: 16px;
+        }
+
+        .capacity-row button {
+            padding: 12px 20px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #2563eb;
+            color: white;
+
+            font-size: 15px;
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+        .capacity-row button:hover {
+            background: #1d4ed8;
+        }
+
+        .capacity-row button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* =================================================
+           MESSAGE
+           ================================================= */
+
+        #message {
+            margin-top: 15px;
+
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .success-message {
+            color: #16a34a;
+        }
+
+        .error-message {
+            color: #dc2626;
+        }
+
+        /* =================================================
+           LAST UPDATE
+           ================================================= */
+
+        .last-update {
+            margin-top: 25px;
+
+            text-align: center;
+
+            color: #6b7280;
+
+            font-size: 13px;
+        }
+
+        /* =================================================
+           RESPONSIVE
+           ================================================= */
+
+        @media (max-width: 700px) {
+
+            header {
+                padding: 18px 20px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            .container {
+                margin-top: 20px;
+            }
+
+            .status-card {
+                grid-column: span 1;
+            }
+
+            .card-value {
+                font-size: 36px;
+            }
+
+            .capacity-row {
+                flex-direction: column;
+            }
+
+            .capacity-row input,
+            .capacity-row button {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <!-- =====================================================
+         HEADER
+         ===================================================== -->
+
+    <header>
+
+        <h1>
+            Smart Occupancy Monitoring
+        </h1>
+
+        <p>
+            Real-Time Capacity Management System
+        </p>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN
+         ===================================================== -->
+
+    <main class="container">
+
+
+        <!-- =================================================
+             CONNECTION STATUS
+             ================================================= -->
+
+        <div class="connection-box">
+
+            <div class="connection-status">
+
+                <span
+                    id="statusDot"
+                    class="status-dot">
+                </span>
+
+                <span id="connectionText">
+                    Connecting to MQTT...
+                </span>
+
+            </div>
+
+            <div id="brokerText">
+                HiveMQ Cloud
+            </div>
+
+        </div>
+
+
+        <!-- =================================================
+             DASHBOARD
+             ================================================= -->
+
+        <section class="dashboard">
+
+
+            <!-- =================================================
+                 OCCUPANCY
+                 ================================================= -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Current Occupancy
+                </div>
+
+                <div
+                    id="occupancyValue"
+                    class="card-value">
+
+                    0
+
+                </div>
+
+                <div class="card-unit">
+                    people
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CAPACITY
+                 ================================================= -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Capacity
+                </div>
+
+                <div
+                    id="capacityValue"
+                    class="card-value">
+
+                    10
+
+                </div>
+
+                <div class="card-unit">
+                    maximum allowed
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 AVAILABLE
+                 ================================================= -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Available Space
+                </div>
+
+                <div
+                    id="availableValue"
+                    class="card-value">
+
+                    10
+
+                </div>
+
+                <div class="card-unit">
+                    spaces available
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 PERCENTAGE
+                 ================================================= -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Occupancy
+                </div>
+
+                <div
+                    id="percentageValue"
+                    class="card-value">
+
+                    0%
+
+                </div>
+
+                <div class="card-unit">
+                    utilization
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 STATUS
+                 ================================================= -->
+
+            <div class="card status-card">
+
+                <div class="card-title">
+                    System Status
+                </div>
+
+                <div
+                    id="statusValue"
+                    class="normal">
+
+                    NORMAL
+
+                </div>
+
+                <div class="card-unit">
+                    Current occupancy condition
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CAPACITY CONTROL
+             ================================================= -->
+
+        <section class="capacity-control">
+
+            <h2>
+                Change Capacity
+            </h2>
+
+            <p>
+                Set the maximum permitted occupancy.
+                The ESP8266 will receive the new value through MQTT.
+            </p>
+
+            <div class="capacity-row">
+
+                <input
+                    type="number"
+                    id="capacityInput"
+                    min="1"
+                    placeholder="Enter capacity">
+
+                <button
+                    id="capacityButton"
+                    onclick="changeCapacity()">
+
+                    Update Capacity
+
+                </button>
+
+            </div>
+
+            <div id="message"></div>
+
+        </section>
+
+
+        <!-- =================================================
+             LAST UPDATE
+             ================================================= -->
+
+        <div class="last-update">
+
+            Last update:
+            <span id="lastUpdate">
+                Waiting for ESP8266...
+            </span>
+
+        </div>
+
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+
+        // ==================================================
+        // MQTT CONFIGURATION
+        // ==================================================
+
+        const MQTT_HOST =
+            "wss://c4102da92fbe4c4e867a3cd351dbf2aa.s1.eu.hivemq.cloud:8884/mqtt";
+
+
+        // ==================================================
+        // IMPORTANT
+        // ==================================================
+        //
+        // Put your HiveMQ credentials here.
+        //
+        // Do NOT send your password to anyone.
+        //
+        // ==================================================
+
+        const MQTT_USERNAME =
+            "crowd_esp";
+
+        const MQTT_PASSWORD =
+            "YOUR_MQTT_PASSWORD";
+
+
+        // ==================================================
+        // MQTT TOPICS
+        // ==================================================
+
+        const OCCUPANCY_TOPIC =
+            "crowd/occupancy";
+
+        const CAPACITY_TOPIC =
+            "crowd/capacity";
+
+
+        // ==================================================
+        // HTML ELEMENTS
+        // ==================================================
+
+        const occupancyValue =
+            document.getElementById(
+                "occupancyValue"
+            );
+
+        const capacityValue =
+            document.getElementById(
+                "capacityValue"
+            );
+
+        const availableValue =
+            document.getElementById(
+                "availableValue"
+            );
+
+        const percentageValue =
+            document.getElementById(
+                "percentageValue"
+            );
+
+        const statusValue =
+            document.getElementById(
+                "statusValue"
+            );
+
+        const statusDot =
+            document.getElementById(
+                "statusDot"
+            );
+
+        const connectionText =
+            document.getElementById(
+                "connectionText"
+            );
+
+        const lastUpdate =
+            document.getElementById(
+                "lastUpdate"
+            );
+
+        const message =
+            document.getElementById(
+                "message"
+            );
+
+        const capacityInput =
+            document.getElementById(
+                "capacityInput"
+            );
+
+        const capacityButton =
+            document.getElementById(
+                "capacityButton"
+            );
+
+
+        // ==================================================
+        // MQTT CONNECTION OPTIONS
+        // ==================================================
+
+        const mqttOptions = {
+
+            username:
+                "crowd_esp",
+
+            password:
+                "1234567890.",
+
+            clean: true,
+
+            connectTimeout:
+                10000,
+
+            reconnectPeriod:
+                3000,
+
+            clientId:
+                "CrowdDashboard-" +
+                Math.random()
+                    .toString(16)
+                    .substring(2)
+
+        };
+
+
+        // ==================================================
+        // CONNECT TO HIVEMQ
+        // ==================================================
+
+        console.log(
+            "Connecting to HiveMQ..."
+        );
+
+
+        const client =
+            mqtt.connect(
+                MQTT_HOST,
+                mqttOptions
+            );
+
+
+        // ==================================================
+        // MQTT CONNECTED
+        // ==================================================
+
+        client.on(
+            "connect",
+            function()
+            {
+
+                console.log(
+                    "MQTT connected!"
+                );
+
+
+                statusDot.classList.add(
+                    "connected"
+                );
+
+
+                connectionText.textContent =
+                    "MQTT Connected";
+
+
+                capacityButton.disabled =
+                    false;
+
+
+                // ------------------------------------------
+                // Subscribe to occupancy
+                // ------------------------------------------
+
+                client.subscribe(
+                    OCCUPANCY_TOPIC,
+                    {
+                        qos: 0
+                    },
+                    function(error)
+                    {
+
+                        if (error)
+                        {
+
+                            console.error(
+                                "Occupancy subscription failed:",
+                                error
+                            );
+
+                        }
+                        else
+                        {
+
+                            console.log(
+                                "Subscribed to:",
+                                OCCUPANCY_TOPIC
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+        );
+
+
+        // ==================================================
+        // MQTT MESSAGE
+        // ==================================================
+
+        client.on(
+            "message",
+            function(topic, payload)
+            {
+
+                console.log(
+                    "MQTT message received:",
+                    topic,
+                    payload.toString()
+                );
+
+
+                // ------------------------------------------
+                // OCCUPANCY DATA
+                // ------------------------------------------
+
+                if (
+                    topic === OCCUPANCY_TOPIC
+                )
+                {
+
+                    try
+                    {
+
+                        const data =
+                            JSON.parse(
+                                payload.toString()
+                            );
+
+
+                        updateDashboard(
+                            data
+                        );
+
+                    }
+                    catch (error)
+                    {
+
+                        console.error(
+                            "Invalid occupancy JSON:",
+                            error
+                        );
+
+                    }
+
+                }
+
+            }
+        );
+
+
+        // ==================================================
+        // UPDATE DASHBOARD
+        // ==================================================
+
+        function updateDashboard(data)
+        {
+
+            console.log(
+                "Dashboard data:",
+                data
+            );
+
+
+            // ------------------------------------------
+            // Occupancy
+            // ------------------------------------------
+
+            if (
+                data.occupancy !== undefined
+            )
+            {
+
+                occupancyValue.textContent =
+                    data.occupancy;
+
+            }
+
+
+            // ------------------------------------------
+            // Capacity
+            // ------------------------------------------
+
+            if (
+                data.capacity !== undefined
+            )
+            {
+
+                capacityValue.textContent =
+                    data.capacity;
+
+                capacityInput.value =
+                    data.capacity;
+
+            }
+
+
+            // ------------------------------------------
+            // Available
+            // ------------------------------------------
+
+            if (
+                data.available !== undefined
+            )
+            {
+
+                availableValue.textContent =
+                    data.available;
+
+            }
+
+
+            // ------------------------------------------
+            // Percentage
+            // ------------------------------------------
+
+            if (
+                data.percentage !== undefined
+            )
+            {
+
+                percentageValue.textContent =
+                    data.percentage + "%";
+
+            }
+
+
+            // ------------------------------------------
+            // Status
+            // ------------------------------------------
+
+            if (
+                data.status !== undefined
+            )
+            {
+
+                statusValue.textContent =
+                    data.status;
+
+
+                statusValue.classList.remove(
+                    "normal",
+                    "full",
+                    "overlimit"
+                );
+
+
+                if (
+                    data.status === "NORMAL"
+                )
+                {
+
+                    statusValue.classList.add(
+                        "normal"
+                    );
+
+                }
+                else if (
+                    data.status === "FULL"
+                )
+                {
+
+                    statusValue.classList.add(
+                        "full"
+                    );
+
+                }
+                else if (
+                    data.status === "OVERLIMIT"
+                )
+                {
+
+                    statusValue.classList.add(
+                        "overlimit"
+                    );
+
+                }
+
+            }
+
+
+            // ------------------------------------------
+            // Last update
+            // ------------------------------------------
+
+            const now =
+                new Date();
+
+            lastUpdate.textContent =
+                now.toLocaleTimeString();
+
+        }
+
+
+        // ==================================================
+        // CHANGE CAPACITY
+        // ==================================================
+
+        function changeCapacity()
+        {
+
+            const newCapacity =
+                parseInt(
+                    capacityInput.value
+                );
+
+
+            // ------------------------------------------
+            // Validate
+            // ------------------------------------------
+
+            if (
+                isNaN(newCapacity) ||
+                newCapacity < 1
+            )
+            {
+
+                showMessage(
+                    "Please enter a valid capacity.",
+                    false
+                );
+
+                return;
+
+            }
+
+
+            // ------------------------------------------
+            // Check MQTT
+            // ------------------------------------------
+
+            if (
+                !client.connected
+            )
+            {
+
+                showMessage(
+                    "MQTT is not connected.",
+                    false
+                );
+
+                return;
+
+            }
+
+
+            // ------------------------------------------
+            // Publish capacity
+            // ------------------------------------------
+
+            client.publish(
+                CAPACITY_TOPIC,
+                String(newCapacity),
+                {
+                    qos: 0,
+                    retain: true
+                },
+                function(error)
+                {
+
+                    if (error)
+                    {
+
+                        console.error(
+                            "Capacity publish failed:",
+                            error
+                        );
+
+
+                        showMessage(
+                            "Failed to update capacity.",
+                            false
+                        );
+
+                    }
+                    else
+                    {
+
+                        console.log(
+                            "Capacity sent:",
+                            newCapacity
+                        );
+
+
+                        showMessage(
+                            "Capacity updated to " +
+                            newCapacity,
+                            true
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        // ==================================================
+        // SHOW MESSAGE
+        // ==================================================
+
+        function showMessage(
+            text,
+            success
+        )
+        {
+
+            message.textContent =
+                text;
+
+
+            message.classList.remove(
+                "success-message",
+                "error-message"
+            );
+
+
+            if (success)
+            {
+
+                message.classList.add(
+                    "success-message"
+                );
+
+            }
+            else
+            {
+
+                message.classList.add(
+                    "error-message"
+                );
+
+            }
+
+
+            setTimeout(
+                function()
+                {
+
+                    message.textContent =
+                        "";
+
+                },
+                4000
+            );
+
+        }
+
+
+        // ==================================================
+        // MQTT ERROR
+        // ==================================================
+
+        client.on(
+            "error",
+            function(error)
+            {
+
+                console.error(
+                    "MQTT error:",
+                    error
+                );
+
+
+                statusDot.classList.remove(
+                    "connected"
+                );
+
+
+                connectionText.textContent =
+                    "MQTT Error";
+
+
+                capacityButton.disabled =
+                    true;
+
+            }
+        );
+
+
+        // ==================================================
+        // MQTT OFFLINE
+        // ==================================================
+
+        client.on(
+            "offline",
+            function()
+            {
+
+                console.log(
+                    "MQTT offline"
+                );
+
+
+                statusDot.classList.remove(
+                    "connected"
+                );
+
+
+                connectionText.textContent =
+                    "MQTT Offline";
+
+
+                capacityButton.disabled =
+                    true;
+
+            }
+        );
+
+
+        // ==================================================
+        // MQTT RECONNECTING
+        // ==================================================
+
+        client.on(
+            "reconnect",
+            function()
+            {
+
+                console.log(
+                    "Reconnecting to MQTT..."
+                );
+
+
+                statusDot.classList.remove(
+                    "connected"
+                );
+
+
+                connectionText.textContent =
+                    "Reconnecting...";
+
+
+                capacityButton.disabled =
+                    true;
+
+            }
+        );
+
+
+        // ==================================================
+        // INITIAL BUTTON STATE
+        // ==================================================
+
+        capacityButton.disabled =
+            true;
+
+    </script>
+
+</body>
+
+</html>
