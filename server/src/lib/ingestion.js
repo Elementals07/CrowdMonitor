@@ -3,12 +3,13 @@ const { getDb } = require('../db');
 const { broadcast } = require('./events');
 
 // Zod schema for ESP8266 occupancy payload validation
+// Supports both legacy payload (with available & percentage) and new concise payload
 const occupancySchema = z.object({
   occupancy: z.number().int().min(0),
   capacity: z.number().int().min(1),
-  available: z.number().int(),
-  percentage: z.number().int().min(0),
-  status: z.enum(['NORMAL', 'FULL', 'OVERLIMIT'])
+  available: z.number().int().optional(),
+  percentage: z.number().int().min(0).optional(),
+  status: z.enum(['NORMAL', 'FULL', 'OVERLIMIT']).optional()
 });
 
 /**
@@ -64,6 +65,21 @@ function processOccupancyMessage(rawPayload, isRetained) {
   }
 
   const sample = parseResult.data;
+  
+  // Calculate defaults if omitted by the ESP8266 payload
+  const available = typeof sample.available === 'number' 
+    ? sample.available 
+    : Math.max(0, sample.capacity - sample.occupancy);
+
+  const percentage = typeof sample.percentage === 'number'
+    ? sample.percentage
+    : (sample.capacity > 0 ? Math.round((sample.occupancy * 100) / sample.capacity) : 0);
+
+  const status = sample.status || (
+    sample.occupancy > sample.capacity ? 'OVERLIMIT' :
+    sample.occupancy === sample.capacity ? 'FULL' : 'NORMAL'
+  );
+
   const now = Date.now();
   const db = getDb();
 
@@ -83,9 +99,9 @@ function processOccupancyMessage(rawPayload, isRetained) {
       now,
       sample.occupancy,
       sample.capacity,
-      sample.available,
-      sample.percentage,
-      sample.status,
+      available,
+      percentage,
+      status,
       source
     );
     const sampleId = Number(insertInfo.lastInsertRowid);
@@ -133,7 +149,7 @@ function processOccupancyMessage(rawPayload, isRetained) {
       SELECT * FROM alerts WHERE type = 'critical' AND ts_end IS NULL LIMIT 1
     `).get();
 
-    if (sample.percentage >= criticalThreshold) {
+    if (percentage >= criticalThreshold) {
       // Critical condition met
       // If critical is open, do not duplicate.
       // If warning was open, close it since status escalated to critical
@@ -145,9 +161,9 @@ function processOccupancyMessage(rawPayload, isRetained) {
           INSERT INTO alerts (type, ts_start, ts_end, occupancy, capacity, threshold_pct, acknowledged_at)
           VALUES ('critical', ?, NULL, ?, ?, ?, NULL)
         `).run(now, sample.occupancy, sample.capacity, criticalThreshold);
-        console.log(`[Ingestion] Opened CRITICAL alert at ${sample.percentage}% (occupancy: ${sample.occupancy}/${sample.capacity})`);
+        console.log(`[Ingestion] Opened CRITICAL alert at ${percentage}% (occupancy: ${sample.occupancy}/${sample.capacity})`);
       }
-    } else if (sample.percentage >= warningThreshold) {
+    } else if (percentage >= warningThreshold) {
       // Warning condition met
       // If critical was open, close it (de-escalated to warning)
       if (openCriticalAlert) {
@@ -158,17 +174,17 @@ function processOccupancyMessage(rawPayload, isRetained) {
           INSERT INTO alerts (type, ts_start, ts_end, occupancy, capacity, threshold_pct, acknowledged_at)
           VALUES ('warning', ?, NULL, ?, ?, ?, NULL)
         `).run(now, sample.occupancy, sample.capacity, warningThreshold);
-        console.log(`[Ingestion] Opened WARNING alert at ${sample.percentage}% (occupancy: ${sample.occupancy}/${sample.capacity})`);
+        console.log(`[Ingestion] Opened WARNING alert at ${percentage}% (occupancy: ${sample.occupancy}/${sample.capacity})`);
       }
     } else {
       // Below warning threshold - close any open alerts
       if (openWarningAlert) {
         db.prepare('UPDATE alerts SET ts_end = ? WHERE id = ?').run(now, openWarningAlert.id);
-        console.log(`[Ingestion] Closed WARNING alert (occupancy normal at ${sample.percentage}%)`);
+        console.log(`[Ingestion] Closed WARNING alert (occupancy normal at ${percentage}%)`);
       }
       if (openCriticalAlert) {
         db.prepare('UPDATE alerts SET ts_end = ? WHERE id = ?').run(now, openCriticalAlert.id);
-        console.log(`[Ingestion] Closed CRITICAL alert (occupancy normal at ${sample.percentage}%)`);
+        console.log(`[Ingestion] Closed CRITICAL alert (occupancy normal at ${percentage}%)`);
       }
     }
 
@@ -177,9 +193,9 @@ function processOccupancyMessage(rawPayload, isRetained) {
       ts: now,
       occupancy: sample.occupancy,
       capacity: sample.capacity,
-      available: sample.available,
-      percentage: sample.percentage,
-      status: sample.status,
+      available,
+      percentage,
+      status,
       source
     };
   });
