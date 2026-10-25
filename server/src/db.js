@@ -93,7 +93,25 @@ function getDb() {
       detail TEXT
     );
     CREATE INDEX IF NOT EXISTS idx_conn_ts ON connection_events(ts);
+
+    CREATE TABLE IF NOT EXISTS sensors (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      code TEXT NOT NULL UNIQUE,
+      name TEXT NOT NULL,
+      location TEXT,
+      created_at INTEGER NOT NULL
+    );
   `);
+
+  // Ensure default prototype sensor exists in sensors table
+  const sensorCount = dbInstance.prepare('SELECT COUNT(*) as count FROM sensors').get();
+  if (sensorCount.count === 0) {
+    dbInstance.prepare(`
+      INSERT INTO sensors (code, name, location, created_at)
+      VALUES (?, ?, ?, ?)
+    `).run('ROOM-101', 'Main Conference Hall', 'Ground Floor - Main Gate', Date.now());
+    console.log('[Database] Seeded default sensor ROOM-101');
+  }
 
   // Initialize default settings if settings table is empty
   const countRow = dbInstance.prepare('SELECT COUNT(*) as count FROM settings').get();
@@ -103,7 +121,9 @@ function getDb() {
       { key: 'critical_threshold_pct', value: '100' },
       { key: 'facility_timezone', value: 'Asia/Kolkata' },
       { key: 'stale_threshold_seconds', value: '60' },
-      { key: 'default_capacity', value: '10' }
+      { key: 'default_capacity', value: '10' },
+      { key: 'primary_sensor_code', value: 'ROOM-101' },
+      { key: 'admin_password', value: 'admin123' }
     ];
 
     const insertSetting = dbInstance.prepare(`

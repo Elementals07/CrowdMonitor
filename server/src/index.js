@@ -17,6 +17,7 @@ const sessionsRouter = require('./routes/sessions');
 const alertsRouter = require('./routes/alerts');
 const reportsRouter = require('./routes/reports');
 const settingsRouter = require('./routes/settings');
+const publicRouter = require('./routes/public');
 
 // Initialize database instance and run migrations
 try {
@@ -60,6 +61,7 @@ app.get('/api/health', healthHandler);
 app.get('/health', healthHandler);
 
 // Mount API routes
+app.use('/api/public', publicRouter);
 app.use('/api/occupancy', occupancyRouter);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/sessions', sessionsRouter);

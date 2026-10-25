@@ -262,4 +262,30 @@ export const api = {
   getHealth: async (): Promise<{ ok: boolean }> => {
     return apiFetch<{ ok: boolean }>('/health');
   },
+
+  // Public Sensor & Auth
+  getPublicSensorStatus: async (code: string): Promise<{
+    data: {
+      sensor: { code: string; name: string; location: string };
+      occupancy: number;
+      capacity: number;
+      available: number;
+      percentage: number;
+      status: 'NORMAL' | 'FULL' | 'OVERLIMIT';
+      lastUpdatedAt: number | null;
+      isStale: boolean;
+      mqttConnected: boolean;
+    }
+  }> => {
+    return apiFetch(`/public/sensor/${encodeURIComponent(code)}`);
+  },
+
+  adminLogin: async (credentials: { username: string; password: string }): Promise<{
+    data: { authenticated: boolean; username: string; role: string; token: string }
+  }> => {
+    return apiFetch('/public/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials),
+    });
+  },
 };

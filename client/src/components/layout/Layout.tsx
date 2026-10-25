@@ -95,18 +95,18 @@ export const Layout: React.FC = () => {
   }, []);
 
   const navItems = [
-    { label: 'Overview', to: '/', icon: LayoutDashboard },
-    { label: 'Live Monitor', to: '/live', icon: Radio },
-    { label: 'Analytics', to: '/analytics', icon: BarChart3 },
-    { label: 'Sessions', to: '/sessions', icon: Clock },
+    { label: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
+    { label: 'Live Monitor', to: '/admin/live', icon: Radio },
+    { label: 'Analytics', to: '/admin/analytics', icon: BarChart3 },
+    { label: 'Sessions', to: '/admin/sessions', icon: Clock },
     {
       label: 'Alerts',
-      to: '/alerts',
+      to: '/admin/alerts',
       icon: Bell,
       badge: openAlertCount > 0 ? openAlertCount : undefined,
     },
-    { label: 'Reports', to: '/reports', icon: FileText },
-    { label: 'Settings', to: '/settings', icon: Settings },
+    { label: 'Reports', to: '/admin/reports', icon: FileText },
+    { label: 'Settings', to: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -152,7 +152,7 @@ export const Layout: React.FC = () => {
               <NavLink
                 key={item.to}
                 to={item.to}
-                end={item.to === '/'}
+                end={item.end || item.to === '/admin'}
                 className={({ isActive }) =>
                   clsx(
                     'flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors group',
@@ -182,6 +182,16 @@ export const Layout: React.FC = () => {
             );
           })}
         </nav>
+
+        {/* Switch to Public Portal Link */}
+        <div className="px-3 pb-2">
+          <NavLink
+            to="/"
+            className="flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-white bg-gray-800/60 hover:bg-gray-800 border border-gray-700/60 transition-colors"
+          >
+            <span>← Public Portal</span>
+          </NavLink>
+        </div>
 
         {/* MQTT Status Indicator Footer */}
         <div className="p-4 border-t border-gray-800 bg-gray-950/40">
