@@ -287,27 +287,27 @@ export const Sessions: React.FC = () => {
 
       {/* Active Session Highlight Banner */}
       {activeSession && (
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-xl p-6 shadow-md relative overflow-hidden">
+        <div className="bg-blue-50 border-2 border-blue-200 text-slate-900 rounded-xl p-6 shadow-sm relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/30 text-blue-200 text-xs font-semibold uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-green-400 animate-ping" />
+              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-semibold uppercase tracking-wider border border-blue-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                 Live Session In Progress
               </div>
-              <h2 className="text-2xl font-bold tracking-tight">{activeSession.name}</h2>
-              <div className="flex flex-wrap items-center gap-4 text-xs text-blue-200">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">{activeSession.name}</h2>
+              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                 <span>
                   Started: {activeSession.started_at ? format(new Date(activeSession.started_at), 'HH:mm:ss (MM/dd)') : '—'}
                 </span>
                 <span>•</span>
-                <span>Elapsed: <span className="font-mono font-bold text-white">{activeDuration || '00:00:00'}</span></span>
+                <span>Elapsed: <span className="font-mono font-bold text-slate-800">{activeDuration || '00:00:00'}</span></span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-6">
-              <div className="bg-white/10 backdrop-blur-md rounded-xl p-3.5 border border-white/20 min-w-[140px] text-center">
-                <span className="text-[11px] uppercase font-bold text-blue-200 block">Live Occupancy</span>
-                <span className="text-3xl font-extrabold text-white">
+              <div className="bg-white rounded-xl p-3.5 border border-blue-200 min-w-[140px] text-center shadow-sm">
+                <span className="text-[11px] uppercase font-bold text-blue-600 block">Live Occupancy</span>
+                <span className="text-3xl font-extrabold text-slate-900">
                   {liveOccupancy !== null ? liveOccupancy : '—'}
                 </span>
               </div>
@@ -315,7 +315,7 @@ export const Sessions: React.FC = () => {
               <button
                 onClick={() => handleEndSession(activeSession)}
                 disabled={actionLoading === activeSession.id}
-                className="inline-flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-lg"
+                className="inline-flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl text-sm transition-colors shadow-md cursor-pointer"
               >
                 {actionLoading === activeSession.id ? (
                   <Spinner size="sm" className="border-white" />
