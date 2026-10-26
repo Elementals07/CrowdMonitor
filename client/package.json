@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
     "clsx": "^2.1.0",
     "date-fns": "^3.3.1",
     "lucide-react": "^0.323.0",
@@ -19,6 +21,7 @@
     "socket.io-client": "^4.6.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
