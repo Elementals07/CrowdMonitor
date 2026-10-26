@@ -33,7 +33,7 @@ jobs:
       - name: Build Web Bundle
         working-directory: ./client
         run: |
-          npm ci
+          npm install
           npm run build
           npx cap sync android
 
