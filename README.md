@@ -1,4 +1,4 @@
-﻿# 🌿 CrowdMonitor — User & Operator Guide
+# 🌿 CrowdMonitor — User & Operator Guide
 *Smart Occupancy Intelligence & Crowd Flow Analytics*
 
 Welcome to **CrowdMonitor**! This guide is written to be clean, calm, and easy to read (low cognitive load, low cortisol). Whether you are an operator watching the entrance, an event coordinator, or a facility manager, this document explains exactly how everything works with clear visual examples and zero guesswork.
@@ -9,16 +9,20 @@ Welcome to **CrowdMonitor**! This guide is written to be clean, calm, and easy t
 1. [What is CrowdMonitor?](#-1-what-is-crowdmonitor)
 2. [System Architecture & Visual Flow](#-2-system-architecture--visual-flow)
 3. [Quick Setup (3 Simple Steps)](#-3-quick-setup-3-simple-steps)
-4. [Tour of the Web Interface](#-4-tour-of-the-web-interface)
-   - [Overview Dashboard](#1-overview-dashboard-)
-   - [Live Monitor](#2-live-monitor-)
-   - [Historical Analytics](#3-historical-analytics-)
-   - [Sessions](#4-sessions-)
-   - [Alerts & Incidents](#5-alerts--incidents-)
-   - [Reports & CSV Exports](#6-reports--csv-exports-)
-   - [Settings & Diagnostics](#7-settings--diagnostics-)
-5. [Real-World Everyday Walkthroughs](#-5-real-world-everyday-walkthroughs)
-6. [Troubleshooting & Calming Fixes](#-6-troubleshooting--calming-fixes)
+4. [Portal Access & Architecture](#-4-portal-access--architecture)
+   - [Public Visitor Portal (`/`)](#1-public-visitor-portal-)
+   - [Live Sensor View (`/view/:code`)](#2-live-sensor-view-viewcode)
+   - [Admin Console Authentication](#3-admin-console-authentication)
+5. [Tour of the Admin Console (`/admin/*`)](#-5-tour-of-the-admin-console-admin)
+   - [Overview Dashboard (`/admin`)](#1-overview-dashboard-admin)
+   - [Live Monitor Cockpit (`/admin/live`)](#2-live-monitor-cockpit-adminlive)
+   - [Historical Analytics (`/admin/analytics`)](#3-historical-analytics-adminanalytics)
+   - [Sessions Management (`/admin/sessions`)](#4-sessions-management-adminsessions)
+   - [Alerts & Incidents (`/admin/alerts`)](#5-alerts--incidents-adminalerts)
+   - [Reports & CSV Exports (`/admin/reports`)](#6-reports--csv-exports-adminreports)
+   - [Settings & Diagnostics (`/admin/settings`)](#7-settings--diagnostics-adminsettings)
+6. [Real-World Everyday Walkthroughs](#-6-real-world-everyday-walkthroughs)
+7. [Troubleshooting & Calming Fixes](#-7-troubleshooting--calming-fixes)
 
 ---
 
@@ -118,9 +122,53 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-## 🖥 4. Tour of the Web Interface
+## 🚪 4. Portal Access & Architecture
 
-### 1. Overview Dashboard (`/`)
+CrowdMonitor features a unified dual-portal architecture designed for both everyday visitors and facility operators:
+
+### 1. Public Visitor Portal (`/`)
+*Clean, calm, and instant. No login or password required.*
+
+- **Direct Sensor Lookups**: Visitors enter an assigned sensor or room code (default: `ROOM-101`) to immediately check live availability.
+- **One-Click Quick Select**: Quick-access chip for testing and review (`ROOM-101 (Main Conference Hall)`).
+- **Fast Status Awareness**: Shows room headcount and door status instantly without exposing administrative controls or private history.
+
+### 2. Live Sensor View (`/view/:code`)
+*A full-width, distraction-free view designed for attendees, hallway displays, or reception desks.*
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ ← Back to Portal    ROOM-101 • Main Conference Hall            🟢 Live Stream│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 🟢 SPACE AVAILABLE — Safe Capacity (Entry Permitted)                        │
+│ Plenty of space remains. You may enter the facility immediately.            │
+├───────────────────────────────────┬──────────────┬──────────────┬───────────┤
+│         HEADCOUNT INSIDE          │ SPACES FREE  │ UTILIZATION  │ DOOR STATE│
+│            👥 4 / 10              │    🟢 6      │     40%      │   🔓 Open │
+├───────────────────────────────────┴──────────────┴──────────────┴───────────┤
+│ Capacity Progress: [████████░░░░░░░░░░░░] 40% Filled                        │
+│ Last Sensor Transmission: 3s ago (Real-time WebSocket active)               │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Zero Scrolling Required**: All vital indicators (headcount, spaces left, percentage bar, door status, and freshness timer) fit cleanly on screen.
+- **Color-Coded State System**:
+  - 🟢 **SPACE AVAILABLE**: Plenty of capacity remains; entry is safe and welcome.
+  - 🟡 **MAX CAPACITY**: 100% full; visitors are advised to queue.
+  - 🔴 **OVER CAPACITY**: Limit exceeded; servo gate closes and entry pauses.
+
+### 3. Admin Console Authentication
+- Facility managers access full controls via the secure login card on the landing page or directly at `/admin`.
+- **Default Credentials for Review/Demo**:
+  - **Username**: `admin`
+  - **Password**: `admin123`
+  - *Includes a 1-click "Auto-Fill" button for easy evaluator testing.*
+
+---
+
+## 🖥 5. Tour of the Admin Console (`/admin/*`)
+
+### 1. Overview Dashboard (`/admin`)
 *The calm high-level view. Perfect for an overhead control monitor.*
 
 ```text
@@ -156,7 +204,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 2. Live Monitor (`/live`)
+### 2. Live Monitor Cockpit (`/admin/live`)
 *The operator control panel for managing real-time flow.*
 
 ```text
@@ -193,7 +241,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 3. Historical Analytics (`/analytics`)
+### 3. Historical Analytics (`/admin/analytics`)
 *Discover patterns, busy hours, and average dwell metrics.*
 
 ```text
@@ -224,7 +272,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 4. Sessions (`/sessions`)
+### 4. Sessions Management (`/admin/sessions`)
 *Track isolated shifts, classroom exams, conferences, or private events.*
 
 ```text
@@ -253,7 +301,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 5. Alerts & Incidents (`/alerts`)
+### 5. Alerts & Incidents (`/admin/alerts`)
 *Peace of mind and safety compliance.*
 
 - **Open Alerts**: Shows active threshold violations. If occupancy passes 80% or 100%, an alert card appears here.
@@ -266,7 +314,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 6. Reports & CSV Exports (`/reports`)
+### 6. Reports & CSV Exports (`/admin/reports`)
 *Extract clean data for spreadsheets, management decks, and compliance records.*
 
 1. Select your **Start Date** and **End Date**.
@@ -277,7 +325,7 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-### 7. Settings & Diagnostics (`/settings`)
+### 7. Settings & Diagnostics (`/admin/settings`)
 *Adjust rules without writing any code.*
 
 - **Warning Threshold**: Set the early caution percentage (Default: `80%`).
@@ -287,26 +335,26 @@ Open your browser and navigate to: **`http://localhost:5173`**
 
 ---
 
-## 🏃 5. Real-World Everyday Walkthroughs
+## 🏃 6. Real-World Everyday Walkthroughs
 
 ### Scenario A: Running a Lecture or Event
-1. Go to **Sessions** (`/sessions`).
+1. Go to **Sessions** (`/admin/sessions`).
 2. Type `"Physics 101 Lecture"` and click **Create Session**.
 3. When students begin walking in, click **Start**.
-4. During the lecture, leave **Live Monitor** open on your phone or tablet.
+4. During the lecture, leave **Live Monitor** (`/admin/live`) open on your phone or tablet.
 5. If the room gets crowded, you will see yellow or red warnings immediately.
 6. When the lecture concludes, click **End Session**.
 7. Click **Export CSV** to download attendance and peak data for your records.
 
 ### Scenario B: Temporarily Raising Capacity
 1. Suppose you have added 5 extra folding chairs to a room with capacity `10`.
-2. Go to **Live Monitor** (`/live`).
+2. Go to **Live Monitor** (`/admin/live`).
 3. In the capacity box, change `10` to `15` and click **Update Capacity**.
 4. The ESP8266 LCD changes from `People: X/10` to `People: X/15` and the servo door stays open.
 
 ---
 
-## 🧘 6. Troubleshooting & Calming Fixes
+## 🧘 7. Troubleshooting & Calming Fixes
 
 | What you see | What it means | How to fix it |
 |---|---|---|
