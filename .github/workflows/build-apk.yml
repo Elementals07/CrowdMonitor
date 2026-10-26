@@ -27,10 +27,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Accept Licenses & Install Android Platforms
-        run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"
+      - name: Set up Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build Web Bundle
         working-directory: ./client
