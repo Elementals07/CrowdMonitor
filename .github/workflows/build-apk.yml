@@ -21,13 +21,16 @@ jobs:
         with:
           node-version: 20
 
-      - name: Set up Java JDK 21
+      - name: Set up Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Accept Licenses & Install Android Platforms
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK Licenses & Install Components
         run: |
           yes | sdkmanager --licenses || true
           sdkmanager "platforms;android-34" "platforms;android-35" "build-tools;34.0.0" "build-tools;35.0.0"
